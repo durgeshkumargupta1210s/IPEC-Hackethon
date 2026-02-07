@@ -64,7 +64,7 @@ function App() {
     
     // Initialize WebSocket connection for real-time updates
     console.log('[App] Initializing WebSocket connection...');
-    initializeWebSocket('http://localhost:5000');
+    initializeWebSocket('http://localhost:3000');
     
     // Set up real-time event listeners
     onAnalysisResult((data) => {
@@ -188,6 +188,36 @@ function App() {
       const result = await analysis.analyzeRegion(latitude, longitude, 50, name);
       
       const riskLevel = result?.riskClassification?.riskLevel || 'low';
+
+      // ✅ Save custom region to predefined regions after successful analysis
+      const isCustomRegion = !regions.some(r => r.name === name);
+      if (isCustomRegion && result.success) {
+        try {
+          const response = await fetch('/api/regions/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: name,
+              latitude: latitude,
+              longitude: longitude,
+              sizeKm: 50,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('[App] ✅ Custom region saved to predefined regions:', name);
+            
+            // Reload regions list
+            const regionsResponse = await fetch('/api/regions');
+            const updatedRegions = await regionsResponse.json();
+            setRegions(updatedRegions);
+          }
+        } catch (error) {
+          console.warn('[App] Could not save custom region:', error.message);
+          // Continue anyway - analysis still succeeded
+        }
+      }
 
       // Check if high-risk problem detected
       if (riskLevel === 'high' || result?.vegetationLossPercentage > 15) {

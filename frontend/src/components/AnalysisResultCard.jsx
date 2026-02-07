@@ -373,32 +373,41 @@ export function AnalysisResultCard({ analysis }) {
 
               {/* Visual bar chart */}
               <div style={{marginTop: '16px', marginBottom: '12px'}}>
-                <div style={{width: '100%', display: 'flex', gap: '2px', borderRadius: '6px', overflow: 'hidden', height: '20px'}}>
-                  <div 
-                    style={{
-                      flex: (analysis.changeDetection.decreaseCount || 0) / (analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0)),
-                      background: '#dc2626',
-                      transition: 'flex 0.3s ease'
-                    }}
-                    title={`Decreased: ${analysis.changeDetection.decreaseCount?.toLocaleString()}`}
-                  />
-                  <div 
-                    style={{
-                      flex: (analysis.changeDetection.stableCount || 0) / (analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0)),
-                      background: '#3b82f6',
-                      transition: 'flex 0.3s ease'
-                    }}
-                    title={`Stable: ${analysis.changeDetection.stableCount?.toLocaleString()}`}
-                  />
-                  <div 
-                    style={{
-                      flex: (analysis.changeDetection.increaseCount || 0) / (analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0)),
-                      background: '#22c55e',
-                      transition: 'flex 0.3s ease'
-                    }}
-                    title={`Increased: ${analysis.changeDetection.increaseCount?.toLocaleString()}`}
-                  />
-                </div>
+                {(() => {
+                  const total = (analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0);
+                  const decreasePercent = total > 0 ? ((analysis.changeDetection.decreaseCount || 0) / total) : 0;
+                  const stablePercent = total > 0 ? ((analysis.changeDetection.stableCount || 0) / total) : 0;
+                  const increasePercent = total > 0 ? ((analysis.changeDetection.increaseCount || 0) / total) : 0;
+                  
+                  return (
+                    <div style={{width: '100%', display: 'flex', gap: '2px', borderRadius: '6px', overflow: 'hidden', height: '20px'}}>
+                      <div 
+                        style={{
+                          flex: decreasePercent || 0.01,
+                          background: '#dc2626',
+                          transition: 'flex 0.3s ease'
+                        }}
+                        title={`Decreased: ${analysis.changeDetection.decreaseCount?.toLocaleString()}`}
+                      />
+                      <div 
+                        style={{
+                          flex: stablePercent || 0.01,
+                          background: '#3b82f6',
+                          transition: 'flex 0.3s ease'
+                        }}
+                        title={`Stable: ${analysis.changeDetection.stableCount?.toLocaleString()}`}
+                      />
+                      <div 
+                        style={{
+                          flex: increasePercent || 0.01,
+                          background: '#22c55e',
+                          transition: 'flex 0.3s ease'
+                        }}
+                        title={`Increased: ${analysis.changeDetection.increaseCount?.toLocaleString()}`}
+                      />
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="unified-card-description">

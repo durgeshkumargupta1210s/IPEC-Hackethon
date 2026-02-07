@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const SENTINEL_HUB_TOKEN = process.env.SENTINEL_HUB_TOKEN;
+const SENTINEL_HUB_TOKEN = process.env.SENTINEL_HUB_TOKEN || 'PLAKe3dfcf56b8d440d797be4e9ef1102d46'; // ✅ Default token
 const SENTINEL_HUB_CLIENT_ID = process.env.SENTINEL_HUB_CLIENT_ID;
 const SENTINEL_HUB_CLIENT_SECRET = process.env.SENTINEL_HUB_CLIENT_SECRET;
 const SENTINEL_HUB_API_KEY = process.env.SENTINEL_HUB_API_KEY;

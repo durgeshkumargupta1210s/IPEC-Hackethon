@@ -3,16 +3,18 @@ Backend Integration Module
 Connect ML models to Express.js backend via HTTP API
 """
 
+import sys
+import os
+
+# Add scripts directory to Python path for module imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, script_dir)
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from inference import ModelInference, ModelAPI
-import os
 from dotenv import load_dotenv
 import logging
-
-# Change to scripts directory to ensure relative paths work correctly
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
 
 # Load environment variables
 load_dotenv()

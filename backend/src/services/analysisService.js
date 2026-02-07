@@ -1,7 +1,9 @@
 const axios = require('axios');
 const { fetchLatestImagery, generateMockSatelliteData } = require('./satelliteService');
+const mlModelClient = require('../models/mlModelClient');
 
-const ML_API_URL = process.env.ML_API_URL || 'http://localhost:5001';
+// Initialize ML API health check
+mlModelClient.startHealthCheck();
 
 async function performAnalysis(region, previousAnalysis = null) {
   try {
@@ -95,13 +97,12 @@ async function performAnalysis(region, previousAnalysis = null) {
     console.log('║         ML MODEL ANALYSIS PIPELINE                 ║');
     console.log('╚════════════════════════════════════════════════════╝\n');
 
-    const { nirBand, redBand } = extractBands(satelliteData);
+    const { nirBand, redBand } = mlModelClient.extractBands(satelliteData);
     console.log('[ML-Model-1] NDVI Predictor: Processing satellite bands...');
     console.log(`[ML-Model-1] Input: NIR band (${nirBand.length} pixels), RED band (${redBand.length} pixels)`);
     
-    // Use fallback functions for now (production-ready with ML fallback)
-    // TODO: Enable ML API calls when scaling: uncomment axios.post calls below
-    const ndviResult = calculateNDVIFallback(nirBand, redBand);
+    // Use ML API or fallback
+    const ndviResult = await mlModelClient.calculateNDVI(nirBand, redBand);
 
     if (!ndviResult.success) {
       console.error('[Analysis] NDVI calculation failed:', ndviResult.error);
@@ -119,7 +120,7 @@ async function performAnalysis(region, previousAnalysis = null) {
     let changeDetectionResult = null;
     if (previousAnalysis && previousAnalysis.ndvi) {
       console.log('[ML-Model-2] Change Detector: Comparing with previous analysis...');
-      changeDetectionResult = detectChangesFallback(ndviResult.ndvi, previousAnalysis.ndvi);
+      changeDetectionResult = await mlModelClient.detectChanges(ndviResult.ndvi, previousAnalysis.ndvi);
       const changePercentage = ((changeDetectionResult.statistics.decreaseCount / (changeDetectionResult.statistics.decreaseCount + changeDetectionResult.statistics.stableCount)) * 100).toFixed(2);
       console.log(`[ML-Model-2] ✅ Change detection complete`);
       console.log(`[ML-Model-2] Pixels with decreased vegetation: ${changePercentage}%`);
@@ -132,14 +133,14 @@ async function performAnalysis(region, previousAnalysis = null) {
       const { decreaseCount, stableCount } = changeDetectionResult.statistics;
       const totalPixels = decreaseCount + stableCount + changeDetectionResult.statistics.increaseCount;
       const percentageChange = (decreaseCount / totalPixels) * 100;
-      riskClassification = classifyRiskFallback(changeDetectionResult.statistics.meanChange, percentageChange);
+      riskClassification = await mlModelClient.classifyRisk(changeDetectionResult.statistics.meanChange, percentageChange);
       console.log(`[ML-Model-3] ✅ Risk classification complete`);
       console.log(`[ML-Model-3] Risk level: ${riskClassification.level}`);
       console.log(`[ML-Model-3] Risk score: ${riskClassification.score.toFixed(2)}\n`);
     } else {
       // Default risk classification for first analysis (no previous data)
       console.log('[ML-Model-3] Risk Classifier: First analysis - baseline risk\n');
-      riskClassification = classifyRiskFallback(0, 0);
+      riskClassification = await mlModelClient.classifyRisk(0, 0);
     }
 
     const executionTime = Date.now() - startTime;
@@ -178,20 +179,6 @@ async function performAnalysis(region, previousAnalysis = null) {
   }
 }
 
-function extractBands(satelliteData) {
-  if (satelliteData.bands) {
-    return {
-      nirBand: satelliteData.bands.NIR || [],
-      redBand: satelliteData.bands.RED || [],
-    };
-  }
-
-  return {
-    nirBand: Array.from({ length: 256 * 256 }, () => Math.random() * 255),
-    redBand: Array.from({ length: 256 * 256 }, () => Math.random() * 255),
-  };
-}
-
 async function batchAnalyze(regions, previousAnalyses = {}) {
   try {
     const results = await Promise.all(
@@ -214,139 +201,7 @@ async function batchAnalyze(regions, previousAnalyses = {}) {
   }
 }
 
-// Fallback functions if ML API is unavailable
-function calculateNDVIFallback(nirBand, redBand) {
-  try {
-    if (!nirBand || !redBand || nirBand.length !== redBand.length) {
-      throw new Error('NIR and RED bands must have same length');
-    }
-
-    const ndviValues = nirBand.map((nir, idx) => {
-      const red = redBand[idx];
-      const denominator = nir + red;
-      if (denominator === 0) return -1;
-      return (nir - red) / denominator;
-    });
-
-    const validValues = ndviValues.filter((val) => val >= -1 && val <= 1);
-    const mean = validValues.length > 0 ? validValues.reduce((a, b) => a + b) / validValues.length : 0;
-    const min = validValues.length > 0 ? Math.min(...validValues) : -1;
-    const max = validValues.length > 0 ? Math.max(...validValues) : 1;
-    const std = calculateStdDevFallback(validValues, mean);
-
-    return {
-      success: true,
-      ndvi: ndviValues,
-      statistics: {
-        mean,
-        min,
-        max,
-        stdDev: std,
-        validPixels: validValues.length,
-        totalPixels: ndviValues.length,
-      },
-      timestamp: new Date(),
-    };
-  } catch (error) {
-    console.error('NDVI fallback calculation error:', error);
-    return {
-      success: false,
-      error: error.message,
-      timestamp: new Date(),
-    };
-  }
-}
-
-function detectChangesFallback(ndviCurrent, ndviPrevious) {
-  try {
-    if (ndviCurrent.length !== ndviPrevious.length) {
-      throw new Error('NDVI arrays must have same length');
-    }
-
-    const changes = ndviCurrent.map((current, idx) => current - ndviPrevious[idx]);
-    const threshold = 0.05;
-    const changeMap = changes.map((change) => {
-      if (change < -threshold) return 'decrease';
-      if (change > threshold) return 'increase';
-      return 'stable';
-    });
-
-    const decreaseCount = changeMap.filter((c) => c === 'decrease').length;
-    const increaseCount = changeMap.filter((c) => c === 'increase').length;
-    const stableCount = changeMap.filter((c) => c === 'stable').length;
-
-    const meanChange = changes.reduce((a, b) => a + b) / changes.length;
-    const minChange = Math.min(...changes);
-    const maxChange = Math.max(...changes);
-
-    return {
-      success: true,
-      changes,
-      changeMap,
-      statistics: {
-        meanChange,
-        minChange,
-        maxChange,
-        decreaseCount,
-        increaseCount,
-        stableCount,
-      },
-      timestamp: new Date(),
-    };
-  } catch (error) {
-    console.error('Change detection fallback error:', error);
-    return {
-      success: false,
-      error: error.message,
-      timestamp: new Date(),
-    };
-  }
-}
-
-function classifyRiskFallback(meanChange, percentageChange) {
-  let riskLevel = 'low';
-  let riskScore = 0;
-
-  const changeMagnitude = Math.abs(meanChange);
-  if (changeMagnitude > 0.15) {
-    riskLevel = 'high';
-    riskScore = 0.8;
-  } else if (changeMagnitude > 0.08) {
-    riskLevel = 'medium';
-    riskScore = 0.5;
-  } else {
-    riskLevel = 'low';
-    riskScore = 0.2;
-  }
-
-  if (percentageChange > 30) {
-    riskScore = Math.min(1, riskScore + 0.2);
-  } else if (percentageChange > 50) {
-    riskScore = 1;
-    riskLevel = 'high';
-  }
-
-  return {
-    success: true,
-    riskLevel,
-    riskScore,
-    changeMagnitude,
-    affectedAreaPercentage: percentageChange,
-    vegetationLossPercentage: Math.max(0, percentageChange * (1 - riskScore)), // Calculate as percentage
-    areaAffected: (percentageChange / 100) * 50, // Assume 50km² base area
-    confidenceScore: 0.85 + (riskScore * 0.15), // Confidence increases with risk score
-    timestamp: new Date(),
-  };
-}
-
-function calculateStdDevFallback(values, mean) {
-  if (values.length === 0) return 0;
-  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-  return Math.sqrt(variance);
-}
-
 module.exports = {
   performAnalysis,
   batchAnalyze,
-  extractBands,
 };

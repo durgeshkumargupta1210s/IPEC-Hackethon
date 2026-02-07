@@ -104,6 +104,9 @@ export function AnalysisControls({ onAnalyze, regions = [], loading = false, onL
 
       {useCustom && (
         <div className="space-y-3">
+          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 text-sm text-blue-700">
+            💡 <strong>Tip:</strong> After analysis, this custom region will be saved to your predefined regions for future use!
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Region Name</label>
             <input
@@ -137,8 +140,11 @@ export function AnalysisControls({ onAnalyze, regions = [], loading = false, onL
                 step="0.001"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
               />
-              <p className="text-xs text-gray-500 mt-1\">Range: -180 to 180</p>
+              <p className="text-xs text-gray-500 mt-1">Range: -180 to 180</p>
             </div>
+          </div>
+          <div className="bg-green-50 border-l-4 border-green-500 p-3 text-sm text-green-700">
+            ✨ <strong>Auto-save:</strong> Once analysis completes, your region becomes a predefined option!
           </div>
         </div>
       )}

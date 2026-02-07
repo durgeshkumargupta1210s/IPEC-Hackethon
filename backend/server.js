@@ -40,9 +40,109 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/satellite
 // Routes - Import only essential ones
 const analysisRoutes = require('./src/api/routes/analysis');
 const healthRoutes = require('./src/api/routes/health');
+const alertsRoutes = require('./src/api/routes/alerts');
+const reportsRoutes = require('./src/api/routes/reports');
 
 app.use('/api/health', healthRoutes);
 app.use('/api/analysis', analysisRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/reports', reportsRoutes);
+
+// ============================================
+// REGIONS MANAGEMENT (In-Memory Storage)
+// ============================================
+const defaultRegions = [
+  {
+    name: '🟢 Valmiki Nagar Forest, Bihar',
+    latitude: 25.65,
+    longitude: 84.12,
+    sizeKm: 50,
+    riskLevel: 'low',
+  },
+  {
+    name: '🟡 Murchison Falls, Uganda',
+    latitude: 2.253,
+    longitude: 32.003,
+    sizeKm: 50,
+    riskLevel: 'medium',
+  },
+  {
+    name: '🔴 Odzala-Kokoua, Congo',
+    latitude: -1.021,
+    longitude: 15.909,
+    sizeKm: 60,
+    riskLevel: 'high',
+  },
+];
+
+// In-memory storage for custom regions
+let customRegions = [];
+
+// Get all regions (default + custom)
+app.get('/api/regions', (req, res) => {
+  const allRegions = [...defaultRegions, ...customRegions];
+  res.json(allRegions);
+});
+
+// Add custom region
+app.post('/api/regions/add', (req, res) => {
+  try {
+    const { name, latitude, longitude, sizeKm } = req.body;
+
+    // Validation
+    if (!name || latitude === undefined || longitude === undefined || !sizeKm) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: name, latitude, longitude, sizeKm',
+      });
+    }
+
+    // Check if region already exists (case-insensitive)
+    const exists = customRegions.some(r => r.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      return res.status(400).json({
+        success: false,
+        error: 'Region with this name already exists',
+      });
+    }
+
+    // Create new region
+    const newRegion = {
+      name: name,
+      latitude: parseFloat(latitude),
+      longitude: parseFloat(longitude),
+      sizeKm: parseFloat(sizeKm),
+      riskLevel: 'unknown',
+      customRegion: true,
+      addedAt: new Date(),
+    };
+
+    // Add to custom regions
+    customRegions.push(newRegion);
+
+    console.log(`\n✅ [Regions] Custom region added: "${name}"`);
+    console.log(`   Location: ${latitude}, ${longitude} | Size: ${sizeKm}km`);
+    console.log(`   Total custom regions: ${customRegions.length}\n`);
+
+    res.json({
+      success: true,
+      message: `Region "${name}" added successfully`,
+      region: newRegion,
+      totalCustomRegions: customRegions.length,
+    });
+  } catch (error) {
+    console.error('[Regions] Error adding region:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get custom regions only
+app.get('/api/regions/custom', (req, res) => {
+  res.json(customRegions);
+});
 
 // Dummy endpoints to suppress 404 errors (for demo)
 app.get('/api/system/status', (req, res) => {
@@ -52,32 +152,6 @@ app.get('/api/system/status', (req, res) => {
     realtimeEnabled: true,
     timestamp: new Date(),
   });
-});
-
-app.get('/api/regions', (req, res) => {
-  res.json([
-    {
-      name: '🟢 Valmiki Nagar Forest, Bihar',
-      latitude: 25.65,
-      longitude: 84.12,
-      sizeKm: 50,
-      riskLevel: 'low',
-    },
-    {
-      name: '🟡 Murchison Falls, Uganda',
-      latitude: 2.253,
-      longitude: 32.003,
-      sizeKm: 50,
-      riskLevel: 'medium',
-    },
-    {
-      name: '🔴 Odzala-Kokoua, Congo',
-      latitude: -1.021,
-      longitude: 15.909,
-      sizeKm: 60,
-      riskLevel: 'high',
-    },
-  ]);
 });
 
 // Health check endpoint
@@ -126,7 +200,7 @@ app.get('/api/test-real-api', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 // Initialize WebSocket (NO REDIS/BULL NEEDED!)
 const io = initializeWebSocket(httpServer);

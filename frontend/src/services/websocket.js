@@ -6,7 +6,7 @@ let listeners = {};
 /**
  * Initialize WebSocket connection
  */
-export const initializeWebSocket = (serverUrl = 'http://localhost:5000') => {
+export const initializeWebSocket = (serverUrl = 'http://localhost:3000') => {
   if (socket) {
     return socket;
   }
