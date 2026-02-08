@@ -1,5 +1,5 @@
 {
-  "root": "frontend",
+  // "root": "frontend",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm ci --legacy-peer-deps",
