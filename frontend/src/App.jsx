@@ -22,6 +22,18 @@ import { useAnalysis } from './hooks/useAnalysis';
 // Styles
 import './App.css';
 
+// Predefined region names to prevent duplicate custom regions
+const PREDEFINED_REGION_NAMES = [
+  '🟢 Valmiki Nagar Forest, Bihar',
+  '🟡 Murchison Falls, Uganda',
+  '🔴 Odzala-Kokoua, Congo',
+  '🌲 Black Forest, Germany',
+  '🏜️ Sahara Desert, Egypt',
+  '🌴 Amazon Rainforest, Brazil',
+  '❄️ Siberian Taiga, Russia',
+  '🌾 Serengeti Plains, Tanzania',
+];
+
 const DEFAULT_REGIONS = [
   { 
     name: '🟢 Valmiki Nagar Forest, Bihar', 
@@ -74,6 +86,13 @@ const DEFAULT_REGIONS = [
     description: 'Stable wetland ecosystem.',
     ndvi: { mean: 0.612, min: 0.320, max: 0.810, stdDev: 0.108 },
     riskClassification: { riskLevel: 'LOW', riskScore: 0.12, confidenceScore: 0.88 }
+  },
+  {
+    name: '🌾 Serengeti Plains, Tanzania',
+    latitude: -2.5,
+    longitude: 34.8,
+    sizeKm: 50,
+    riskLevel: 'medium',
   },
 ];
 

@@ -48,7 +48,7 @@ async function performRealTimeAnalysis(region, options = {}) {
     const realtimeData = await realTimeDataService.fetchAllRealTimeData(
       region.latitude,
       region.longitude,
-      region.sizeKm || 50
+      region.sizeKm || 2
     );
 
     console.log(`[RealTimeAnalysis] ✅ Real-time data fetched (${realtimeData.executionTime}ms)`);
@@ -140,7 +140,7 @@ async function performCalculations(region, realtimeData, options = {}) {
       vegetationLoss,
       cloudCoverage,
       ndvi.mean,
-      region.sizeKm || 50
+      region.sizeKm || 2
     );
 
     // Calculate confidence based on data quality
@@ -399,7 +399,7 @@ function generateComprehensiveReport(region, realtimeData, calculations, mlEnhan
       riskLevel: calculations.riskLevel,
       riskScore: riskLevelToScore(calculations.riskLevel),
       vegetationLossPercentage: calculations.vegetationLoss,
-      areaAffected: (calculations.vegetationLoss / 100) * (region.sizeKm || 50),
+      areaAffected: (calculations.vegetationLoss / 100) * (region.sizeKm || 2),
       confidenceScore: calculations.confidence,
       trend: calculations.trend,
     },
@@ -438,7 +438,7 @@ function generateComprehensiveReport(region, realtimeData, calculations, mlEnhan
     location: {
       latitude: region.latitude,
       longitude: region.longitude,
-      sizeKm: region.sizeKm || 50,
+      sizeKm: region.sizeKm || 2,
     },
   };
 }

@@ -30,7 +30,7 @@ router.post('/realtime', async (req, res) => {
     const analysis = await analyzeRegionRealTime(
       parseFloat(latitude),
       parseFloat(longitude),
-      parseFloat(sizeKm) || 50,
+      parseFloat(sizeKm) || 2,
       name || `Region (${latitude}, ${longitude})`
     );
 
@@ -68,7 +68,7 @@ router.post('/realtime-with-history', async (req, res) => {
     const analysisWithHistory = await analyzeWithHistory(
       parseFloat(latitude),
       parseFloat(longitude),
-      parseFloat(sizeKm) || 50,
+      parseFloat(sizeKm) || 2,
       name || `Region (${latitude}, ${longitude})`
     );
 

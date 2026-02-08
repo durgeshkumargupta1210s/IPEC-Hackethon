@@ -5,12 +5,12 @@
  */
 
 const axios = require('axios');
+const { getSentinelHubAuthHeader } = require('./sentinelHubAuth');
 
 // Configuration
 const CONFIG = {
   ENABLE_REAL_API: process.env.ENABLE_REAL_SATELLITE_API === 'true',
   ENABLE_DUMMY_DATA: process.env.ENABLE_DUMMY_DATA !== 'false', // Fallback enabled by default
-  SENTINEL_HUB_TOKEN: process.env.SENTINEL_HUB_TOKEN || 'PLAKe3dfcf56b8d440d797be4e9ef1102d46',
   SENTINEL_HUB_REGION: process.env.SENTINEL_HUB_REGION || 'eu',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
@@ -122,6 +122,7 @@ async function fetchRealTimeSatelliteData(latitude, longitude, sizeKm) {
         const endDate = new Date();
         const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+        const authHeader = await getSentinelHubAuthHeader();
         const response = await axios.get(
           'https://services.sentinel-hub.com/api/v1/catalog/search',
           {
@@ -132,7 +133,7 @@ async function fetchRealTimeSatelliteData(latitude, longitude, sizeKm) {
               limit: 5,
             },
             headers: {
-              'Authorization': `Bearer ${CONFIG.SENTINEL_HUB_TOKEN}`,
+              ...authHeader,
               'Content-Type': 'application/json',
             },
             timeout: CONFIG.TIMEOUT,
@@ -268,7 +269,7 @@ async function fetchRealTimeAirQualityData(latitude, longitude) {
 /**
  * Fetch real-time environmental data from multiple sources
  */
-async function fetchAllRealTimeData(latitude, longitude, sizeKm = 50) {
+async function fetchAllRealTimeData(latitude, longitude, sizeKm = 2) {
   console.log('[RealTimeData] 🌍 Starting multi-source real-time data fetch...');
   
   const startTime = Date.now();
@@ -302,7 +303,7 @@ async function fetchAllRealTimeData(latitude, longitude, sizeKm = 50) {
 /**
  * Generate realistic dummy satellite data with variation based on location
  */
-function generateDummySatelliteData(latitude, longitude, sizeKm = 50, reason = 'manual') {
+function generateDummySatelliteData(latitude, longitude, sizeKm = 2, reason = 'manual') {
   const seed = Math.abs(Math.sin(latitude * longitude) * 10000);
   const random = (min = 0, max = 1) => {
     const value = Math.sin(seed + Date.now() * 0.001) * 0.5 + 0.5;
@@ -458,7 +459,7 @@ function random(min, max) {
 /**
  * Complete real-time analysis combining satellite, weather, and air quality
  */
-async function performRealTimeAnalysis(latitude, longitude, sizeKm = 50) {
+async function performRealTimeAnalysis(latitude, longitude, sizeKm = 2) {
   console.log(`[RealTimeAnalysis] Starting comprehensive real-time analysis...`);
 
   try {

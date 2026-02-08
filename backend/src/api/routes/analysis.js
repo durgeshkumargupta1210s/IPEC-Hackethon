@@ -4,7 +4,40 @@ const { performAnalysis, batchAnalyze } = require('../../services/analysisServic
 const { performRealTimeAnalysis } = require('../../services/realTimeAnalysisService');
 const { AnalysisResult, MonitoredRegion, Alert } = require('../../models');
 const Region = require('../../models/Region');
-const { generateMockHistoryForRegion } = require('../../utils/mockHistoryGenerator');
+const { validateAnalysisData, validateAnalysisArray } = require('../../utils/analysisValidator');
+
+// List of predefined regions to prevent duplicate custom regions
+const PREDEFINED_REGION_NAMES = [
+  '🟢 Valmiki Nagar Forest, Bihar',
+  '🟡 Murchison Falls, Uganda',
+  '🔴 Odzala-Kokoua, Congo',
+  '🌲 Black Forest, Germany',
+  '🏜️ Sahara Desert, Egypt',
+  '🌴 Amazon Rainforest, Brazil',
+  '❄️ Siberian Taiga, Russia',
+  '🌾 Serengeti Plains, Tanzania',
+];
+
+// Also include variants without emojis that may have been saved
+const PREDEFINED_PATTERNS = [
+  'Valmiki Nagar Forest',
+  'Murchison Falls',
+  'Odzala-Kokoua',
+  'Black Forest',
+  'Sahara Desert',
+  'Amazon Rainforest',
+  'Siberian Taiga',
+  'Serengeti Plains',
+];
+
+const isPredefinedRegion = (regionName) => {
+  // Check exact matches first (with emoji)
+  if (PREDEFINED_REGION_NAMES.includes(regionName)) {
+    return true;
+  }
+  // Check if name contains any predefined patterns
+  return PREDEFINED_PATTERNS.some(pattern => regionName.includes(pattern));
+};
 
 router.post('/analyze', async (req, res, next) => {
   try {
@@ -31,29 +64,72 @@ router.post('/analyze', async (req, res, next) => {
         hasLatestMetrics: !!region.latestMetrics,
         latestMetrics: region.latestMetrics,
       });
-    }
-    
-    // If not found in database, create from request data
-    if (!region) {
+      
+      // Update region with request parameters (use request values, not old DB values)
+      region.latitude = latitude;
+      region.longitude = longitude;
+      region.sizeKm = sizeKm || region.sizeKm || 50;
+      console.log(`[API] ⚠️  Region updated with request parameters - Lat: ${latitude}, Lon: ${longitude}, Size: ${region.sizeKm}km`);
+    } else {
+      // Create new region from request data
       region = { latitude, longitude, sizeKm: sizeKm || 50, name };
+      console.log(`[API] ✅ New region created from request - Lat: ${latitude}, Lon: ${longitude}, Size: ${region.sizeKm}km`);
     }
     
-    const result = await performAnalysis(region);
+    // Fetch previous analysis for change detection
+    let previousAnalysis = null;
+    try {
+      const lastAnalysis = await AnalysisResult.findOne({ regionName: name }).sort({ timestamp: -1 });
+      if (lastAnalysis) {
+        previousAnalysis = lastAnalysis;
+        console.log(`[API] ✅ Found previous analysis from ${lastAnalysis.timestamp.toISOString()}`);
+      } else {
+        console.log(`[API] ℹ️  No previous analysis found - first analysis for this region`);
+      }
+    } catch (err) {
+      console.warn(`[API] Could not fetch previous analysis: ${err.message}`);
+    }
+    
+    const result = await performAnalysis(region, previousAnalysis);
 
     if (!result.success) {
-      return res.status(500).json({ 
-        success: false,
-        error: result.error,
-        regionName: result.regionName,
-        timestamp: result.timestamp,
-      });
+      console.error(`[API] Analysis failed: ${result.error}`);
+      
+      // In DEVELOPMENT mode, provide detailed error and hint at solutions
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`[API] Development Mode: Returning detailed error for debugging`);
+        return res.status(503).json({ 
+          success: false,
+          error: result.error,
+          regionName: result.regionName,
+          timestamp: result.timestamp,
+          mode: 'development',
+          help: {
+            issue: 'Real Sentinel Hub API call failed',
+            solutions: [
+              '1. Verify SENTINEL_HUB_CLIENT_ID in .env is correct',
+              '2. Verify SENTINEL_HUB_CLIENT_SECRET in .env is correct', 
+              '3. Check network connectivity to sentinel-hub.com',
+              '4. For testing with synthetic data, set: ALLOW_SYNTHETIC_FALLBACK=true in .env'
+            ]
+          }
+        });
+      } else {
+        // PRODUCTION: Return error without revealing details
+        return res.status(503).json({ 
+          success: false,
+          error: 'Real satellite data fetch failed. Please try again.',
+          regionName: result.regionName,
+          timestamp: result.timestamp,
+        });
+      }
     }
 
     const analysisRecord = new AnalysisResult({
       regionName: result.regionName,
       latitude: region.latitude,
       longitude: region.longitude,
-      ndvi: result.ndvi.statistics,
+      ndvi: result.ndvi.ndvi || result.ndvi.values || [], // Store full NDVI array for change detection
       changeDetection: result.changeDetection?.statistics,
       riskClassification: result.riskClassification,
       satelliteData: result.satelliteData,
@@ -73,9 +149,10 @@ router.post('/analyze', async (req, res, next) => {
     );
 
     // Auto-save custom region to Region collection for future reference
+    // BUT: Don't save if this is a predefined region to avoid duplicates
     const existingRegion = await Region.findOne({ name: region.name });
-    if (!existingRegion) {
-      // This is a new custom region - save it to the predefined regions
+    if (!existingRegion && !isPredefinedRegion(region.name)) {
+      // Only save as custom region if it's truly user-entered (not predefined)
       const newRegion = new Region({
         name: region.name,
         latitude: region.latitude,
@@ -99,9 +176,10 @@ router.post('/analyze', async (req, res, next) => {
         lastScanDate: new Date(),
       });
       await newRegion.save();
-      console.log(`\n✅ [REGION] New custom region SAVED to predefined regions: ${region.name}`);
+      console.log(`\n✅ [REGION] New custom region SAVED: ${region.name}`);
       console.log(`   Location: ${region.latitude.toFixed(4)}, ${region.longitude.toFixed(4)}`);
       console.log(`   Risk Level: ${(result.riskClassification?.riskLevel || 'low').toUpperCase()}`);
+      console.log(`   NDVI: ${(result.ndvi?.mean || 0).toFixed(4)}\n`);
       console.log(`   NDVI: ${(result.ndvi?.mean || 0).toFixed(4)}\n`);
     } else {
       // Update existing region with latest metrics and history
@@ -109,6 +187,9 @@ router.post('/analyze', async (req, res, next) => {
         { name: region.name },
         {
           $set: {
+            latitude: region.latitude,
+            longitude: region.longitude,
+            sizeKm: region.sizeKm,
             latestMetrics: {
               vegetationLoss: result.riskClassification?.vegetationLossPercentage || 0,
               riskLevel: (result.riskClassification?.riskLevel || 'low').toUpperCase(),
@@ -127,11 +208,13 @@ router.post('/analyze', async (req, res, next) => {
             }
           }
         },
-        { new: true }
+        { new: true, upsert: true }
       );
-      console.log(`\n✅ [REGION] Region metrics updated: ${region.name}`);
-      console.log(`   Risk Level: ${(result.riskClassification?.riskLevel || 'low').toUpperCase()}`);
-      console.log(`   Total analyses: ${(updatedRegion.analysisHistory?.length || 0)}\n`);
+      if (updatedRegion) {
+        console.log(`\n✅ [REGION] Region metrics updated: ${region.name}`);
+        console.log(`   Risk Level: ${(result.riskClassification?.riskLevel || 'low').toUpperCase()}`);
+        console.log(`   Total analyses: ${(updatedRegion.analysisHistory?.length || 0)}\n`);
+      }
     }
 
     // Build clean response object with proper NDVI flattening
@@ -157,15 +240,18 @@ router.post('/analyze', async (req, res, next) => {
         areaAffected: 0,
         confidenceScore: 0.85,
       },
-      vegetationLossPercentage: result.riskClassification?.vegetationLossPercentage || 0,
-      areaAffected: result.riskClassification?.areaAffected || 0,
-      confidenceScore: result.riskClassification?.confidenceScore || 0.85,
+      vegetationLossPercentage: result.vegetationLossPercentage || 0,
+      areaAffected: result.areaAffected || 0,
+      confidenceScore: result.confidenceScore || 0.85,
       satelliteData: result.satelliteData,
     };
 
+    // Validate analysis to ensure realistic values
+    const validatedResponse = validateAnalysisData(analysisResponse);
+
     res.json({
       success: true,
-      analysis: analysisResponse,
+      analysis: validatedResponse,
       regionSaved: true,
       message: `Region "${region.name}" analyzed and saved to predefined regions list`,
     });
@@ -179,30 +265,7 @@ router.get('/history/:regionName', async (req, res, next) => {
     const { regionName } = req.params;
     const { limit = 10, skip = 0 } = req.query;
 
-    // Check if this is a demo region
-    const region = await Region.findOne({ name: regionName });
-    
-    if (region && region.latestMetrics && region.latestMetrics.riskLevel) {
-      // This is a demo region - return mock historical data
-      console.log(`[API] Returning mock history for demo region: ${regionName}`);
-      const mockHistory = generateMockHistoryForRegion(
-        regionName,
-        region.latestMetrics.riskLevel,
-        region.latestMetrics.vegetationLoss
-      );
-      
-      // Apply pagination
-      const paginated = mockHistory.slice(skip, skip + parseInt(limit));
-      return res.json({
-        success: true,
-        total: mockHistory.length,
-        count: paginated.length,
-        analyses: paginated,
-        isDemo: true,
-      });
-    }
-
-    // For non-demo regions, fetch from database
+    // Fetch from database
     const analyses = await AnalysisResult.find({ regionName })
       .sort({ timestamp: -1 })
       .limit(parseInt(limit))
@@ -210,11 +273,14 @@ router.get('/history/:regionName', async (req, res, next) => {
 
     const total = await AnalysisResult.countDocuments({ regionName });
 
+    // Validate all analyses to ensure realistic values
+    const validatedAnalyses = validateAnalysisArray(analyses);
+
     res.json({
       success: true,
       total,
-      count: analyses.length,
-      analyses,
+      count: validatedAnalyses.length,
+      analyses: validatedAnalyses,
       isDemo: false,
     });
   } catch (error) {
@@ -235,10 +301,13 @@ router.get('/latest', async (req, res, next) => {
       { $replaceRoot: { newRoot: '$doc' } },
     ]);
 
+    // Validate all analyses to ensure realistic values
+    const validatedAnalyses = validateAnalysisArray(analyses);
+
     res.json({
       success: true,
-      count: analyses.length,
-      analyses,
+      count: validatedAnalyses.length,
+      analyses: validatedAnalyses,
     });
   } catch (error) {
     next(error);
@@ -296,8 +365,14 @@ router.post('/analyze-realtime', async (req, res, next) => {
 
     // Fetch or create region
     let region = await Region.findOne({ name });
-    if (!region) {
-      region = { latitude, longitude, sizeKm: sizeKm || 50, name };
+    if (region) {
+      // Update region with request parameters (use request values, not old DB values)
+      region.latitude = latitude;
+      region.longitude = longitude;
+      region.sizeKm = sizeKm || region.sizeKm || 2;
+    } else {
+      // Create new region from request data
+      region = { latitude, longitude, sizeKm: sizeKm || 2, name };
     }
 
     console.log('[API:RealTime] Starting real-time analysis...');
@@ -338,7 +413,7 @@ router.post('/analyze-realtime', async (req, res, next) => {
         name: region.name,
         latitude: region.latitude,
         longitude: region.longitude,
-        sizeKm: region.sizeKm || 50,
+        sizeKm: region.sizeKm || 2,
         active: true,
         latestMetrics: {
           vegetationLoss: result.riskClassification?.vegetationLossPercentage || 0,
@@ -389,9 +464,12 @@ router.post('/analyze-realtime', async (req, res, next) => {
 
     console.log('[API:RealTime] Analysis complete and saved');
 
+    // Validate result to ensure realistic values
+    const validatedResult = validateAnalysisData(result);
+
     res.json({
       success: true,
-      ...result,
+      ...validatedResult,
       regionSaved: true,
       message: `Real-time analysis complete for "${region.name}"`,
     });
@@ -399,6 +477,30 @@ router.post('/analyze-realtime', async (req, res, next) => {
     console.error('[API:RealTime] Error:', error.message);
     next(error);
   }
+});
+
+// Test endpoint to verify OAuth2 and real satellite data are working
+router.get('/test-real-api', (req, res) => {
+  console.log('[Test API] Status check');
+  
+  const hasCreds = !!process.env.SENTINEL_HUB_CLIENT_ID && !!process.env.SENTINEL_HUB_CLIENT_SECRET;
+  const isRealApiEnabled = process.env.ENABLE_REAL_SATELLITE_API !== 'false';
+  
+  res.json({
+    status: 'ok',
+    message: 'Sentinel Hub OAuth2 Configuration Status',
+    oauthToken: hasCreds,
+    ENABLE_REAL_SATELLITE_API: isRealApiEnabled,
+    environment: {
+      SENTINEL_HUB_CLIENT_ID: hasCreds ? '✅ Configured' : '❌ Missing',
+      SENTINEL_HUB_CLIENT_SECRET: hasCreds ? '✅ Configured' : '❌ Missing',
+      SENTINEL_HUB_REGION: process.env.SENTINEL_HUB_REGION || 'eu',
+    },
+    systemStatus: {
+      satelliteAPI: isRealApiEnabled && hasCreds ? 'READY' : 'CHECKING',
+      realData: isRealApiEnabled && hasCreds ? 'Real Sentinel-2 Data Available' : 'Fallback/Mock Data'
+    }
+  });
 });
 
 module.exports = router;

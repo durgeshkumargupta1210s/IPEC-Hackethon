@@ -10,7 +10,7 @@ const Region = require('../models/Region');
 /**
  * Perform comprehensive analysis with real-time data and fallbacks
  */
-async function analyzeRegionRealTime(latitude, longitude, sizeKm = 50, regionName = 'Unknown Region') {
+async function analyzeRegionRealTime(latitude, longitude, sizeKm = 2, regionName = 'Unknown Region') {
   const startTime = Date.now();
   console.log(`[EnhancedAnalysis] Starting real-time analysis: ${regionName}`);
   console.log(`[EnhancedAnalysis] Location: (${latitude}, ${longitude}), Size: ${sizeKm}km`);
@@ -135,7 +135,7 @@ async function analyzeRegionRealTime(latitude, longitude, sizeKm = 50, regionNam
 /**
  * Generate demo/fallback analysis data
  */
-function generateDemoAnalysis(regionName, latitude, longitude, sizeKm = 50, errorReason = null) {
+function generateDemoAnalysis(regionName, latitude, longitude, sizeKm = 2, errorReason = null) {
   console.log(`[EnhancedAnalysis] Generating demo analysis for ${regionName}`);
 
   // Generate realistic but pseudo-random data based on coordinates
@@ -252,7 +252,7 @@ async function analyzeRegionsBatchRealTime(regions) {
       analyzeRegionRealTime(
         region.latitude,
         region.longitude,
-        region.sizeKm || 50,
+        region.sizeKm || 2,
         region.name
       )
     )

@@ -108,7 +108,7 @@ function generateAreaReason(analysis, region) {
   if (totalPixels === 0) return null;
 
   const percentageAffected = (decreaseCount / totalPixels) * 100;
-  const sizeKm = region.sizeKm || 50;
+  const sizeKm = region.sizeKm || 2;
   const hectaresPerPixel = (sizeKm * sizeKm * 100) / totalPixels;
   const affectedHectares = decreaseCount * hectaresPerPixel;
 

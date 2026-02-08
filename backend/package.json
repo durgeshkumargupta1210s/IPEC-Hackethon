@@ -1,7 +1,7 @@
 {
   "name": "satellite-monitoring-backend",
   "version": "1.0.0",
-  "description": "MERN Stack Backend for Satellite Monitoring System",
+  "description": "ForestGuard - Backend API for Real-time Forest Monitoring",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -20,16 +20,21 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.5.0",
+    "bull": "^4.16.5",
     "cors": "^2.8.5",
     "date-fns": "^2.30.0",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
+    "geotiff": "^3.0.0",
     "mathjs": "^11.11.0",
     "moment": "^2.29.4",
     "mongoose": "^7.5.2",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.7",
     "pdfkit": "^0.13.0",
+    "redis": "^5.10.0",
+    "sharp": "^0.34.5",
+    "socket.io": "^4.8.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

@@ -17,7 +17,7 @@ async function createRegion(regionData) {
       name: regionData.name,
       latitude: regionData.latitude,
       longitude: regionData.longitude,
-      sizeKm: regionData.sizeKm || 50,
+      sizeKm: regionData.sizeKm || 2,
       alertThreshold: regionData.alertThreshold || 15,
       metadata: regionData.metadata || {},
       notificationEmail: regionData.notificationEmail,

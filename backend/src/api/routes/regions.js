@@ -149,6 +149,8 @@ router.get('/alerts/active', async (req, res) => {
  * POST /api/regions/demo/seed
  * Create demo regions with different risk levels for judges
  */
+// DISABLED: Demo seeding endpoint - was creating duplicate demo regions
+/*
 router.post('/demo/seed', async (req, res) => {
   try {
     const Region = require('../../models/Region');
@@ -244,5 +246,6 @@ router.post('/demo/seed', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+*/
 
 module.exports = router;

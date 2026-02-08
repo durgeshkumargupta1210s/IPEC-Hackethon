@@ -8,7 +8,7 @@ const DEFAULT_REGIONS = [
     name: 'Murchison Falls, Uganda',
     latitude: 2.253,
     longitude: 32.003,
-    sizeKm: 50,
+    sizeKm: 2,
     description: 'Protected area in Uganda',
   },
   {

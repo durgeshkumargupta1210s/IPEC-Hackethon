@@ -3,10 +3,17 @@ ML Model Inference Script
 Real-time predictions using trained models
 """
 
+import sys
+import os
+
+# Add scripts directory to path for module imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir not in sys.path:
+    sys.path.insert(0, script_dir)
+
 import numpy as np
 import pandas as pd
 import joblib
-import os
 import json
 from preprocess import SatelliteDataPreprocessor
 
