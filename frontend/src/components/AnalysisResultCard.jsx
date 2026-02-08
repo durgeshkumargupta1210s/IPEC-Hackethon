@@ -322,62 +322,77 @@ export function AnalysisResultCard({ analysis }) {
       {analysis.changeDetection && typeof analysis.changeDetection === 'object' && (
         <>
           <div className="card-section-title">🔄 Pixel Change Analysis</div>
-          <div className="unified-card unified-card-primary">
-            <div className="unified-card-header">
-              <span className="unified-card-icon">📍</span>
-              <span className="unified-card-title">Pixel Distribution</span>
+          {analysis.changeDetection.hasComparison === false ? (
+            // First analysis - no previous data to compare
+            <div className="unified-card unified-card-primary">
+              <div className="unified-card-header">
+                <span className="unified-card-icon">ℹ️</span>
+                <span className="unified-card-title">First Analysis</span>
+              </div>
+              <div className="unified-card-body">
+                <p style={{fontSize: '14px', color: '#6b7280', margin: '0'}}>
+                  No previous analysis data available for comparison. Analyze this region again to see pixel-level changes and vegetation trends.
+                </p>
+              </div>
             </div>
-            <div className="unified-card-body">
-              <div style={{fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '16px'}}>
-                Total pixels analyzed: {(analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0))?.toLocaleString()}
+          ) : (
+            // Comparison available - show pixel distribution
+            <div className="unified-card unified-card-primary">
+              <div className="unified-card-header">
+                <span className="unified-card-icon">📍</span>
+                <span className="unified-card-title">Pixel Distribution</span>
               </div>
-              
-              {/* Pixel breakdown grid */}
-              <div className="unified-card-grid unified-card-grid-3col" style={{marginTop: '12px', gap: '8px'}}>
-                <div style={{padding: '12px', background: '#fee2e2', borderRadius: '6px', textAlign: 'center'}}>
-                  <div style={{fontSize: '18px', fontWeight: '700', color: '#dc2626'}}>
-                    {analysis.changeDetection.decreaseCount?.toLocaleString() || 0}
+              <div className="unified-card-body">
+                <div style={{fontSize: '14px', fontWeight: '600', color: '#1f2937', marginBottom: '16px'}}>
+                  Total pixels analyzed: {(((analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0))).toLocaleString()}
+                </div>
+                
+                {/* Pixel breakdown grid */}
+                <div className="unified-card-grid unified-card-grid-3col" style={{marginTop: '12px', gap: '8px'}}>
+                  <div style={{padding: '12px', background: '#fee2e2', borderRadius: '6px', textAlign: 'center'}}>
+                    <div style={{fontSize: '18px', fontWeight: '700', color: '#dc2626'}}>
+                      {((analysis.changeDetection.decreaseCount || 0)).toLocaleString()}
+                    </div>
+                    <div style={{fontSize: '11px', color: '#991b1b', marginTop: '4px', fontWeight: '500'}}>
+                      DECREASED VEGETATION
+                    </div>
+                    <div style={{fontSize: '10px', color: '#7f1d1d', marginTop: '2px'}}>
+                      {(((analysis.changeDetection.decreaseCount || 0) / Math.max(1, (analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0))) * 100).toFixed(1)}%
+                    </div>
                   </div>
-                  <div style={{fontSize: '11px', color: '#991b1b', marginTop: '4px', fontWeight: '500'}}>
-                    DECREASED VEGETATION
+
+                  <div style={{padding: '12px', background: '#dbeafe', borderRadius: '6px', textAlign: 'center'}}>
+                    <div style={{fontSize: '18px', fontWeight: '700', color: '#2563eb'}}>
+                      {((analysis.changeDetection.stableCount || 0)).toLocaleString()}
+                    </div>
+                    <div style={{fontSize: '11px', color: '#1e40af', marginTop: '4px', fontWeight: '500'}}>
+                      STABLE VEGETATION
+                    </div>
+                    <div style={{fontSize: '10px', color: '#1e3a8a', marginTop: '2px'}}>
+                      {(((analysis.changeDetection.stableCount || 0) / Math.max(1, (analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0))) * 100).toFixed(1)}%
+                    </div>
                   </div>
-                  <div style={{fontSize: '10px', color: '#7f1d1d', marginTop: '2px'}}>
-                    {((analysis.changeDetection.decreaseCount || 0) / (analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0)) * 100).toFixed(1)}%
+
+                  <div style={{padding: '12px', background: '#dcfce7', borderRadius: '6px', textAlign: 'center'}}>
+                    <div style={{fontSize: '18px', fontWeight: '700', color: '#16a34a'}}>
+                      {((analysis.changeDetection.increaseCount || 0)).toLocaleString()}
+                    </div>
+                    <div style={{fontSize: '11px', color: '#166534', marginTop: '4px', fontWeight: '500'}}>
+                      INCREASED VEGETATION
+                    </div>
+                    <div style={{fontSize: '10px', color: '#15803d', marginTop: '2px'}}>
+                      {(((analysis.changeDetection.increaseCount || 0) / Math.max(1, (analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0))) * 100).toFixed(1)}%
+                    </div>
                   </div>
                 </div>
 
-                <div style={{padding: '12px', background: '#dbeafe', borderRadius: '6px', textAlign: 'center'}}>
-                  <div style={{fontSize: '18px', fontWeight: '700', color: '#2563eb'}}>
-                    {analysis.changeDetection.stableCount?.toLocaleString() || 0}
-                  </div>
-                  <div style={{fontSize: '11px', color: '#1e40af', marginTop: '4px', fontWeight: '500'}}>
-                    STABLE VEGETATION
-                  </div>
-                  <div style={{fontSize: '10px', color: '#1e3a8a', marginTop: '2px'}}>
-                    {((analysis.changeDetection.stableCount || 0) / (analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0)) * 100).toFixed(1)}%
-                  </div>
-                </div>
-
-                <div style={{padding: '12px', background: '#dcfce7', borderRadius: '6px', textAlign: 'center'}}>
-                  <div style={{fontSize: '18px', fontWeight: '700', color: '#16a34a'}}>
-                    {analysis.changeDetection.increaseCount?.toLocaleString() || 0}
-                  </div>
-                  <div style={{fontSize: '11px', color: '#166534', marginTop: '4px', fontWeight: '500'}}>
-                    INCREASED VEGETATION
-                  </div>
-                  <div style={{fontSize: '10px', color: '#15803d', marginTop: '2px'}}>
-                    {((analysis.changeDetection.increaseCount || 0) / (analysis.changeDetection.decreaseCount + analysis.changeDetection.stableCount + (analysis.changeDetection.increaseCount || 0)) * 100).toFixed(1)}%
-                  </div>
-                </div>
-              </div>
-
-              {/* Visual bar chart */}
-              <div style={{marginTop: '16px', marginBottom: '12px'}}>
-                {(() => {
-                  const total = (analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0);
-                  const decreasePercent = total > 0 ? ((analysis.changeDetection.decreaseCount || 0) / total) : 0;
-                  const stablePercent = total > 0 ? ((analysis.changeDetection.stableCount || 0) / total) : 0;
-                  const increasePercent = total > 0 ? ((analysis.changeDetection.increaseCount || 0) / total) : 0;
+                {/* Visual bar chart */}
+                <div style={{marginTop: '16px', marginBottom: '12px'}}>
+                  {(() => {
+                    const total = Math.max(1, (analysis.changeDetection.decreaseCount || 0) + (analysis.changeDetection.stableCount || 0) + (analysis.changeDetection.increaseCount || 0));
+                    const decreasePercent = total > 0 ? ((analysis.changeDetection.decreaseCount || 0) / total) : 0;
+                    const stablePercent = total > 0 ? ((analysis.changeDetection.stableCount || 0) / total) : 0;
+                    const increasePercent = total > 0 ? ((analysis.changeDetection.increaseCount || 0) / total) : 0;
                   
                   return (
                     <div style={{width: '100%', display: 'flex', gap: '2px', borderRadius: '6px', overflow: 'hidden', height: '20px'}}>
@@ -387,7 +402,7 @@ export function AnalysisResultCard({ analysis }) {
                           background: '#dc2626',
                           transition: 'flex 0.3s ease'
                         }}
-                        title={`Decreased: ${analysis.changeDetection.decreaseCount?.toLocaleString()}`}
+                        title={`Decreased: ${((analysis.changeDetection.decreaseCount || 0)).toLocaleString()}`}
                       />
                       <div 
                         style={{
@@ -395,7 +410,7 @@ export function AnalysisResultCard({ analysis }) {
                           background: '#3b82f6',
                           transition: 'flex 0.3s ease'
                         }}
-                        title={`Stable: ${analysis.changeDetection.stableCount?.toLocaleString()}`}
+                        title={`Stable: ${((analysis.changeDetection.stableCount || 0)).toLocaleString()}`}
                       />
                       <div 
                         style={{
@@ -403,18 +418,19 @@ export function AnalysisResultCard({ analysis }) {
                           background: '#22c55e',
                           transition: 'flex 0.3s ease'
                         }}
-                        title={`Increased: ${analysis.changeDetection.increaseCount?.toLocaleString()}`}
+                        title={`Increased: ${((analysis.changeDetection.increaseCount || 0)).toLocaleString()}`}
                       />
                     </div>
                   );
                 })()}
               </div>
+            </div>
 
               <div className="unified-card-description">
                 Shows the distribution of pixel-level changes detected in the satellite imagery. Red = vegetation loss, Blue = stable/unchanged, Green = vegetation growth.
               </div>
             </div>
-          </div>
+          )}
         </>
       )}
 

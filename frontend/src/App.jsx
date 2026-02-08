@@ -15,6 +15,18 @@ import { useAnalysis } from './hooks/useAnalysis';
 import { initializeWebSocket, subscribeToRegion, onAnalysisResult, onAnalysisProgress, onJobQueued } from './services/websocket';
 import './App.css';
 
+// Predefined region names to prevent duplicate custom regions
+const PREDEFINED_REGION_NAMES = [
+  '🟢 Valmiki Nagar Forest, Bihar',
+  '🟡 Murchison Falls, Uganda',
+  '🔴 Odzala-Kokoua, Congo',
+  '🌲 Black Forest, Germany',
+  '🏜️ Sahara Desert, Egypt',
+  '🌴 Amazon Rainforest, Brazil',
+  '❄️ Siberian Taiga, Russia',
+  '🌾 Serengeti Plains, Tanzania',
+];
+
 const DEFAULT_REGIONS = [
   {
     name: '🟢 Valmiki Nagar Forest, Bihar',
@@ -34,15 +46,43 @@ const DEFAULT_REGIONS = [
     name: '🔴 Odzala-Kokoua, Congo',
     latitude: -1.021,
     longitude: 15.909,
-    sizeKm: 60,
+    sizeKm: 50,
     riskLevel: 'high',
   },
   {
-    name: '🟢 Kasai Biosphere, DRC',
-    latitude: -4.338,
-    longitude: 20.823,
-    sizeKm: 80,
+    name: '🌲 Black Forest, Germany',
+    latitude: 48.5,
+    longitude: 8.2,
+    sizeKm: 50,
     riskLevel: 'low',
+  },
+  {
+    name: '🏜️ Sahara Desert, Egypt',
+    latitude: 25.0,
+    longitude: 25.0,
+    sizeKm: 50,
+    riskLevel: 'high',
+  },
+  {
+    name: '🌴 Amazon Rainforest, Brazil',
+    latitude: -3.0,
+    longitude: -60.0,
+    sizeKm: 50,
+    riskLevel: 'medium',
+  },
+  {
+    name: '❄️ Siberian Taiga, Russia',
+    latitude: 65.0,
+    longitude: 100.0,
+    sizeKm: 50,
+    riskLevel: 'low',
+  },
+  {
+    name: '🌾 Serengeti Plains, Tanzania',
+    latitude: -2.5,
+    longitude: 34.8,
+    sizeKm: 50,
+    riskLevel: 'medium',
   },
 ];
 
@@ -130,9 +170,11 @@ function App() {
   const fetchRegionsFromBackend = async () => {
     try {
       const response = await api.get('/regions');
-      if (response.data && Array.isArray(response.data)) {
+      const regionsList = response.data?.data || response.data;
+      
+      if (regionsList && Array.isArray(regionsList)) {
         // Merge with default regions, custom regions will be added
-        const backendRegions = response.data.map(r => ({
+        const backendRegions = regionsList.map(r => ({
           name: r.name,
           latitude: r.latitude,
           longitude: r.longitude,
@@ -180,7 +222,7 @@ function App() {
         latitude,
         longitude,
         name,
-        sizeKm: 5,
+        sizeKm: 50,
         riskLevel: 'low',
         isCustom: true,
       });
@@ -189,8 +231,10 @@ function App() {
       
       const riskLevel = result?.riskClassification?.riskLevel || 'low';
 
-      // ✅ Save custom region to predefined regions after successful analysis
-      const isCustomRegion = !regions.some(r => r.name === name);
+      // ✅ Only save as custom region if it's NOT a predefined region
+      const isPredefinedRegion = PREDEFINED_REGION_NAMES.includes(name);
+      const isCustomRegion = !regions.some(r => r.name === name) && !isPredefinedRegion;
+      
       if (isCustomRegion && result.success) {
         try {
           const response = await fetch('/api/regions/add', {
@@ -206,13 +250,19 @@ function App() {
 
           if (response.ok) {
             const data = await response.json();
-            console.log('[App] ✅ Custom region saved to predefined regions:', name);
-            
-            // Reload regions list
-            const regionsResponse = await fetch('/api/regions');
-            const updatedRegions = await regionsResponse.json();
-            setRegions(updatedRegions);
+            console.log('[App] ✅ Custom region saved:', name);
+          } else if (response.status === 400) {
+            // Region already exists - this is fine
+            console.log('[App] ℹ️ Region already exists in database:', name);
+          } else {
+            console.warn('[App] Failed to save custom region:', response.status);
           }
+          
+          // Always reload regions list to get latest state
+          const regionsResponse = await fetch('/api/regions');
+          const regionsData = await regionsResponse.json();
+          const regionsList = regionsData.data || [];
+          setRegions(regionsList);
         } catch (error) {
           console.warn('[App] Could not save custom region:', error.message);
           // Continue anyway - analysis still succeeded
@@ -242,7 +292,7 @@ function App() {
         latitude,
         longitude,
         name,
-        sizeKm: 5,
+        sizeKm: 50,
         riskLevel: riskLevel,
         isCustom: true,
         timestamp: new Date().toLocaleString(),

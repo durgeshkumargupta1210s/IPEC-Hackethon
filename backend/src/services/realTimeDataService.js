@@ -269,7 +269,7 @@ async function fetchRealTimeAirQualityData(latitude, longitude) {
 /**
  * Fetch real-time environmental data from multiple sources
  */
-async function fetchAllRealTimeData(latitude, longitude, sizeKm = 50) {
+async function fetchAllRealTimeData(latitude, longitude, sizeKm = 2) {
   console.log('[RealTimeData] 🌍 Starting multi-source real-time data fetch...');
   
   const startTime = Date.now();
@@ -303,7 +303,7 @@ async function fetchAllRealTimeData(latitude, longitude, sizeKm = 50) {
 /**
  * Generate realistic dummy satellite data with variation based on location
  */
-function generateDummySatelliteData(latitude, longitude, sizeKm = 50, reason = 'manual') {
+function generateDummySatelliteData(latitude, longitude, sizeKm = 2, reason = 'manual') {
   const seed = Math.abs(Math.sin(latitude * longitude) * 10000);
   const random = (min = 0, max = 1) => {
     const value = Math.sin(seed + Date.now() * 0.001) * 0.5 + 0.5;
@@ -459,7 +459,7 @@ function random(min, max) {
 /**
  * Complete real-time analysis combining satellite, weather, and air quality
  */
-async function performRealTimeAnalysis(latitude, longitude, sizeKm = 50) {
+async function performRealTimeAnalysis(latitude, longitude, sizeKm = 2) {
   console.log(`[RealTimeAnalysis] Starting comprehensive real-time analysis...`);
 
   try {

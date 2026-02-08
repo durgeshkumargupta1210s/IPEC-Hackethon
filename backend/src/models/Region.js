@@ -17,7 +17,7 @@ const regionSchema = new mongoose.Schema({
   sizeKm: {
     type: Number,
     required: true,
-    default: 50,
+    default: 2,
   },
   
   // Metadata

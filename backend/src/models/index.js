@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const CustomReason = require('./CustomReason');
 
 const analysisResultSchema = new mongoose.Schema({
   regionName: { type: String, required: true, index: true },
@@ -42,7 +43,7 @@ const monitoredRegionSchema = new mongoose.Schema({
   description: String,
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
-  sizeKm: { type: Number, default: 50 },
+  sizeKm: { type: Number, default: 2 },
   monitoringEnabled: { type: Boolean, default: true },
   lastAnalysisDate: Date,
   riskLevel: { type: String, enum: ['low', 'medium', 'high'], default: 'low' },
@@ -78,4 +79,5 @@ module.exports = {
   MonitoredRegion: mongoose.model('MonitoredRegion', monitoredRegionSchema),
   Alert: mongoose.model('Alert', alertSchema),
   SchedulerJobLog: mongoose.model('SchedulerJobLog', schedulerJobLogSchema),
+  CustomReason: CustomReason,
 };
