@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: ml-model-api
+    runtime: python
+    pythonVersion: 3.11
+    
+    # Build command
+    buildCommand: |
+      cd ml_model
+      pip install -r requirements.txt
+    
+    # Start command
+    startCommand: gunicorn --workers 2 --threads 2 --worker-class gthread --bind 0.0.0.0:$PORT app:app
+    
+    # Environment variables
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: true
+      - key: DEBUG
+        value: "False"
+      - key: ML_PORT
+        value: "5001"
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Scaling
+    numInstances: 1
+    instanceType: starter
+    
+    # Auto-deploy on push
+    autoDeploy: true
