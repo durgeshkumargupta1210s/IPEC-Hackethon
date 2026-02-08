@@ -267,6 +267,44 @@ app.post('/api/regions/add', async (req, res) => {
   }
 });
 
+// ============================================
+// WEBSOCKET INITIALIZATION
+// ============================================
+function initializeWebSocket(httpServer) {
+  const socketIO = require('socket.io')(httpServer, {
+    cors: {
+      origin: allowedOrigins,
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+  });
+
+  socketIO.on('connection', (socket) => {
+    console.log(`📡 WebSocket connected: ${socket.id}`);
+
+    socket.on('disconnect', () => {
+      console.log(`📡 WebSocket disconnected: ${socket.id}`);
+    });
+
+    // Real-time analysis updates
+    socket.on('analysis-update', (data) => {
+      socketIO.emit('analysis-update', data);
+    });
+
+    // Real-time alerts
+    socket.on('alert', (data) => {
+      socketIO.emit('alert', data);
+    });
+
+    // Real-time region updates
+    socket.on('region-update', (data) => {
+      socketIO.emit('region-update', data);
+    });
+  });
+
+  return socketIO;
+}
+
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/analysis', analysisRoutes);
