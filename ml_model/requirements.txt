@@ -1,0 +1,22 @@
+# ML Model Dependencies
+# Satellite Imagery Analysis & NDVI Computation
+
+# Data Processing
+numpy>=1.21.0
+pandas>=1.3.0
+
+# Machine Learning
+scikit-learn>=1.0.0
+joblib>=1.1.0
+
+# API & Environment
+requests>=2.27.0
+python-dotenv>=0.19.0
+
+# Development & Monitoring
+python-dateutil>=2.8.2
+
+# Optional: For advanced satellite processing (if needed)
+# rasterio>=1.2.0
+# gdal>=3.4.0
+# spectral>=0.23.1
