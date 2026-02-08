@@ -6,7 +6,18 @@ const http = require('http');
 // Load environment variables
 dotenv.config();
 
-const { initializeWebSocket } = require('./src/utils/websocket-simple');
+const mongoose = require('mongoose');
+const analysisRoutes = require('./src/api/routes/analysis');
+const analysisExtendedRoutes = require('./src/api/routes/analysis-extended');
+const realTimeAnalysisRoutes = require('./src/api/routes/realtime-analysis');
+const regionsRoutes = require('./src/api/routes/regions');
+const systemRoutes = require('./src/api/routes/system');
+const healthRoutes = require('./src/api/routes/health');
+const mlRoutes = require('./src/api/routes/ml');
+const alertsRoutes = require('./src/api/routes/alerts');
+const emailAlertsRoutes = require('./src/api/routes/emailAlerts');
+const reportsRoutes = require('./src/api/routes/reports');
+const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -270,61 +281,17 @@ app.post('/api/regions/add', async (req, res) => {
   }
 });
 
-// Dummy endpoints to suppress 404 errors (for demo)
-app.get('/api/system/status', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'ForestGuard Demo Server',
-    realtimeEnabled: true,
-    timestamp: new Date(),
-  });
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'ForestGuard Server - Real-Time Edition',
-    timestamp: new Date(),
-    realtimeEnabled: true,
-  });
-});
-
-// Test endpoint to verify real API is working
-app.get('/api/test-real-api', async (req, res) => {
-  try {
-    const { fetchLatestImagery } = require('./src/services/satelliteService');
-    console.log('\n🧪 Testing Real Satellite API...\n');
-    
-    // Test with Valmiki Nagar Forest, Bihar
-    const result = await fetchLatestImagery(25.65, 84.12, 50);
-    
-    if (result.success) {
-      res.json({
-        success: true,
-        message: '✅ Real API is working!',
-        dataSource: result.source,
-        apiStatus: result.apiStatus,
-        location: result.location,
-        timestamp: result.timestamp,
-        fetchDuration: result.fetchDuration,
-      });
-    } else {
-      res.json({
-        success: false,
-        message: '⚠️ Real API failed, fallback active',
-        error: result.error,
-        apiStatus: result.apiStatus,
-      });
-    }
-  } catch (error) {
-    res.json({
-      success: false,
-      message: '❌ Real API test failed',
-      error: error.message,
-    });
-  }
-});
+// Routes
+app.use('/api/health', healthRoutes);
+app.use('/api/analysis', analysisRoutes);
+app.use('/api/analysis', analysisExtendedRoutes);
+app.use('/api/analysis', realTimeAnalysisRoutes);
+app.use('/api/ml', mlRoutes);
+app.use('/api/regions', regionsRoutes);
+app.use('/api/system', systemRoutes);
+app.use('/api/alerts', alertsRoutes);
+app.use('/api/alerts', emailAlertsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 const PORT = process.env.PORT || 3000;
 

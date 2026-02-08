@@ -3,7 +3,7 @@
 .env.local
 .env.*.local
 .env.production.local
-
+package-lock.json
 # Python
 __pycache__/
 *.py[cod]
