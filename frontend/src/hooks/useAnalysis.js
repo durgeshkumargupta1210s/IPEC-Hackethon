@@ -130,6 +130,7 @@ export function useAnalysis() {
     getStats,
     checkHealth,
     setSelectedRegion: (region) => store.setSelectedRegion(region),
+    setCurrentAnalysis: (analysis) => store.setCurrentAnalysis(analysis),
     clearError: () => setLocalError(null),
   };
 }

@@ -1,17 +1,101 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --sidebar-width: 280px;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  /* Modern Glass Effect */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm rounded-3xl;
+  }
+
+  /* Improved Sidebar Navigation */
+  .sidebar-nav-btn {
+    @apply w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 font-medium hover:bg-emerald-50 hover:text-emerald-700;
+  }
+
+  .sidebar-nav-btn.active {
+    @apply bg-emerald-600 text-white shadow-lg shadow-emerald-200;
+  }
+
+  /* Smooth Main Content Transition */
+  .main-content {
+    @apply transition-all duration-300 ease-in-out;
+    margin-left: var(--sidebar-width);
+  }
+
+  .sidebar-closed + .main-content {
+    margin-left: 0;
+  }
+}
+
+/* This ensures Leaflet takes up the full container height we defined in Tailwind */
+/* Removes any internal padding that Leaflet adds by default */
+/* This forces the map to fill the entire rounded container */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  position: absolute !important;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: inherit; /* Maintains your professional rounded corners */
+}
+
+/* Fixes the white gap at the bottom of tiles */
+.leaflet-pane {
+  z-index: 1;
+}
+
+/* Ensure the main dashboard grid stretches vertically */
+.grid {
+  align-items: stretch;
+}
+
+/* Adjusts the main content container to allow the map to grow vertically */
+.main-content {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide the Leaflet attribution for a cleaner "Custom" look (Optional) */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Ensures the sidebar controls maintain a professional height/spacing */
+.lg\:col-span-2 .bg-white {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Fixes any potential map tile stretching */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  object-fit: cover;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}

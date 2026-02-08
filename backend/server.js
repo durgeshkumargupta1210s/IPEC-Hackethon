@@ -14,6 +14,7 @@ const systemRoutes = require('./src/api/routes/system');
 const healthRoutes = require('./src/api/routes/health');
 const mlRoutes = require('./src/api/routes/ml');
 const alertsRoutes = require('./src/api/routes/alerts');
+const emailAlertsRoutes = require('./src/api/routes/emailAlerts');
 const reportsRoutes = require('./src/api/routes/reports');
 const errorHandler = require('./src/middleware/errorHandler');
 
@@ -151,6 +152,7 @@ app.use('/api/ml', mlRoutes);
 app.use('/api/regions', regionsRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/alerts', alertsRoutes);
+app.use('/api/alerts', emailAlertsRoutes);
 app.use('/api/reports', reportsRoutes);
 
 // Error Handler Middleware (must be last)

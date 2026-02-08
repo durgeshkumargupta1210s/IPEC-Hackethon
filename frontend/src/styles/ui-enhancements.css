@@ -1,0 +1,351 @@
+/* ============================================================================
+   UI ENHANCEMENTS - Professional Polish & Visual Hierarchy
+   ============================================================================ */
+
+/* Improve text rendering */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Enhanced metric values with better contrast */
+.text-metric {
+  letter-spacing: -0.02em;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.text-metric.emerald {
+  color: #22c55e;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.15);
+}
+
+.text-metric.amber {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.15);
+}
+
+.text-metric.blue {
+  color: #3b82f6;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.15);
+}
+
+/* Better section headers */
+.text-section-header {
+  position: relative;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+/* Enhanced labels with better spacing */
+.text-label {
+  opacity: 1;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+}
+
+/* Glass card enhancements */
+.glass-card {
+  position: relative;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+}
+
+/* Enhanced button interactions */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.4s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+/* Enhanced status badges */
+.status-badge {
+  position: relative;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+.status-badge.operational {
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.25);
+}
+
+.status-badge.warning {
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.status-badge.critical {
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.status-badge.warning .status-dot {
+  background: #f59e0b;
+}
+
+.status-badge.critical .status-dot {
+  background: #ef4444;
+}
+
+/* Progress bar enhancement */
+.progress-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.progress-bar-fill {
+  background: linear-gradient(90deg, #22c55e 0%, #10b981 100%);
+  height: 100%;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
+  border-radius: 2px;
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+  filter: blur(6px);
+}
+
+.progress-bar-fill.warning {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
+}
+
+.progress-bar-fill.critical {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
+}
+
+/* Enhanced flex utilities */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Better spacing utilities */
+.mt-lg {
+  margin-top: 1.5rem;
+}
+
+.mb-lg {
+  margin-bottom: 1.5rem;
+}
+
+.mt-md {
+  margin-top: 1rem;
+}
+
+.mb-md {
+  margin-bottom: 1rem;
+}
+
+/* Enhanced animations */
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 16px currentColor);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Text styling improvements */
+.text-description {
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.text-secondary {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Better list styling */
+ul, ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Improved focus states */
+*:focus-visible {
+  outline: 2px solid rgba(34, 197, 94, 0.5);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgba(34, 197, 94, 0.5);
+  outline-offset: 2px;
+}
+
+/* Responsive text sizing */
+@media (max-width: 1199px) {
+  .text-title {
+    font-size: 1.75rem;
+  }
+
+  .text-section-header {
+    font-size: 1.25rem;
+  }
+
+  .text-metric {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .text-title {
+    font-size: 1.5rem;
+  }
+
+  .text-section-header {
+    font-size: 1.125rem;
+  }
+
+  .text-metric {
+    font-size: 1.75rem;
+  }
+
+  .text-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improved shadows for depth */
+.shadow-lg {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.shadow-md {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.shadow-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth transitions */
+* {
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button, a, input, select {
+  transition-property: all;
+}
+
+/* Better scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-color: rgba(34, 197, 94, 0.3) rgba(255, 255, 255, 0.05);
+  scrollbar-width: thin;
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(34, 197, 94, 0.3);
+  color: white;
+}
+
+::-moz-selection {
+  background: rgba(34, 197, 94, 0.3);
+  color: white;
+}
