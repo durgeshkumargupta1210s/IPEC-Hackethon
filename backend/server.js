@@ -47,7 +47,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Try MongoDB connection (optional for demo)
-const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/satellite-db', {
   useNewUrlParser: true,
   useUnifiedTopology: true,

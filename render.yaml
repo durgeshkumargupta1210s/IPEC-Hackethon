@@ -1,4 +1,5 @@
 services:
+  # ML Model API Service
   - type: web
     name: ml-model-api
     runtime: python
@@ -30,3 +31,53 @@ services:
     
     # Auto-deploy on push
     autoDeploy: true
+
+  # Backend API Service
+  - type: web
+    name: forest-guard-backend
+    runtime: node
+    
+    # Root directory
+    rootDir: backend
+    
+    # Build command
+    buildCommand: npm install
+    
+    # Start command
+    startCommand: npm start
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: true
+      - key: ML_API_URL
+        value: https://satellite-change-detection-system.onrender.com
+      - key: LOG_LEVEL
+        value: info
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Scaling
+    numInstances: 1
+    instanceType: starter
+    
+    # Auto-deploy on push
+    autoDeploy: true
+    
+    # Databases
+    databases:
+      - name: mongodb
+        plan: free  # Free tier MongoDB (if using Render's MongoDB)
+        
+    # Environment secrets (add in Render dashboard)
+    # - MONGO_URI
+    # - CORS_ORIGIN
+    # - JWT_SECRET
+    # - SMTP_HOST
+    # - SMTP_PORT
+    # - SMTP_USER
+    # - SMTP_PASS
+
