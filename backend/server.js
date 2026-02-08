@@ -58,19 +58,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/satellite
     console.warn('⚠️  MongoDB not available - running in demo mode (in-memory)\n');
   });
 
-// Routes - Import only essential ones
-const analysisRoutes = require('./src/api/routes/analysis');
-const healthRoutes = require('./src/api/routes/health');
-const alertsRoutes = require('./src/api/routes/alerts');
-const reportsRoutes = require('./src/api/routes/reports');
-const customReasonRoutes = require('./src/api/routes/custom-reasons');
-
-app.use('/api/health', healthRoutes);
-app.use('/api/analysis', analysisRoutes);
-app.use('/api/alerts', alertsRoutes);
-app.use('/api/reports', reportsRoutes);
-app.use('/api/custom-reasons', customReasonRoutes);
-
 // ============================================
 // REGIONS MANAGEMENT - Database Backed
 // ============================================
