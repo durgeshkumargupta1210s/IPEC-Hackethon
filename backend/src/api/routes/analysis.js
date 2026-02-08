@@ -4,6 +4,7 @@ const { performAnalysis, batchAnalyze } = require('../../services/analysisServic
 const { performRealTimeAnalysis } = require('../../services/realTimeAnalysisService');
 const { AnalysisResult, MonitoredRegion, Alert } = require('../../models');
 const Region = require('../../models/Region');
+const { validateAnalysisData, validateAnalysisArray } = require('../../utils/analysisValidator');
 
 // List of predefined regions to prevent duplicate custom regions
 const PREDEFINED_REGION_NAMES = [
@@ -245,9 +246,12 @@ router.post('/analyze', async (req, res, next) => {
       satelliteData: result.satelliteData,
     };
 
+    // Validate analysis to ensure realistic values
+    const validatedResponse = validateAnalysisData(analysisResponse);
+
     res.json({
       success: true,
-      analysis: analysisResponse,
+      analysis: validatedResponse,
       regionSaved: true,
       message: `Region "${region.name}" analyzed and saved to predefined regions list`,
     });
@@ -269,11 +273,14 @@ router.get('/history/:regionName', async (req, res, next) => {
 
     const total = await AnalysisResult.countDocuments({ regionName });
 
+    // Validate all analyses to ensure realistic values
+    const validatedAnalyses = validateAnalysisArray(analyses);
+
     res.json({
       success: true,
       total,
-      count: analyses.length,
-      analyses,
+      count: validatedAnalyses.length,
+      analyses: validatedAnalyses,
       isDemo: false,
     });
   } catch (error) {
@@ -294,10 +301,13 @@ router.get('/latest', async (req, res, next) => {
       { $replaceRoot: { newRoot: '$doc' } },
     ]);
 
+    // Validate all analyses to ensure realistic values
+    const validatedAnalyses = validateAnalysisArray(analyses);
+
     res.json({
       success: true,
-      count: analyses.length,
-      analyses,
+      count: validatedAnalyses.length,
+      analyses: validatedAnalyses,
     });
   } catch (error) {
     next(error);
@@ -454,9 +464,12 @@ router.post('/analyze-realtime', async (req, res, next) => {
 
     console.log('[API:RealTime] Analysis complete and saved');
 
+    // Validate result to ensure realistic values
+    const validatedResult = validateAnalysisData(result);
+
     res.json({
       success: true,
-      ...result,
+      ...validatedResult,
       regionSaved: true,
       message: `Real-time analysis complete for "${region.name}"`,
     });
